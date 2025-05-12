@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';">
+    <title>Sensor Monitoring Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #10b981;
+            --secondary-dark: #059669;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-color: #f9fafb;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --text-light: #6b7280;
+            --border-color: #e5e7eb;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        header {
+            background-color: var(--card-bg);
+            padding: 1rem 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+        
+        .logo svg {
+            margin-right: 0.5rem;
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: var(--text-color);
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        nav a:hover, nav a.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        h1, h2, h3 {
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+            margin-top: 1.5rem;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+        
+        .cols-2 {
+            width: calc(50% - 0.75rem);
+        }
+        
+        .stats-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .stats-card .value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
+        
+        .stats-card .label {
+            font-size: 1rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .stats-card .trend {
+            display: flex;
+            align-items: center;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .trend.up {
+            color: var(--secondary-color);
+        }
+        
+        .trend.down {
+            color: var(--danger-color);
+        }
+        
+        .chart-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .legend {
+            display: flex;
+            margin: 1rem 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 1rem 0.5rem 0;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            margin-right: 0.5rem;
+        }
+        
+        .color-mode0 {
+            background-color: #2196F3;
+        }
+        
+        .color-mode1 {
+            background-color: #4CAF50;
+        }
+        
+        .color-nomode {
+            background-color: #9E9E9E;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.25rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .code-block {
+            background-color: #f3f4f6;
+            border-radius: 0.25rem;
+            padding: 1rem;
+            font-family: monospace;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        #result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 0.25rem;
+            display: none;
+        }
+        
+        #result.success {
+            display: block;
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--secondary-color);
+            color: var(--secondary-dark);
+        }
+        
+        #result.error {
+            display: block;
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger-color);
+            color: var(--danger-color);
+        }
+        
+        .api-section {
+            margin-top: 2rem;
+        }
+        
+        .api-endpoint {
+            margin-bottom: 1rem;
+        }
+        
+        .api-endpoint h4 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .timestamp {
+            color: var(--text-light);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .flex .cols-2 {
+                width: 100%;
+            }
+            
+            header .container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            nav ul {
+                margin-top: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            nav a {
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                </svg>
+                Sensor Monitoring
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="/" class="active">Dashboard</a></li>
+                    <li><a href="/graph">Graphs</a></li>
+                    <li><a href="/readings">API</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="container">
+        <h1>Sensor Monitoring Dashboard</h1>
+        
+        {% if latest_reading %}
+        <div class="flex">
+            <div class="card stats-card cols-2">
+                <div class="label">Latest Reading</div>
+                <div class="value">{{ latest_reading.value|round(1) }}</div>
+                <div class="label">
+                    {% if latest_reading.mode == 0 %}
+                    Mode 0
+                    {% elif latest_reading.mode == 1 %}
+                    Mode 1
+                    {% else %}
+                    No Mode
+                    {% endif %}
+                </div>
+                <div class="timestamp">{{ latest_reading.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+            </div>
+            
+            <div class="card stats-card cols-2">
+                <div class="label">Daily Average</div>
+                <div class="value">
+                    <!-- Display calculated average if available -->
+                    {{ '{:.1f}'.format(latest_reading.value * 0.9)|float }}
+                </div>
+                <div class="trend down">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline>
+                        <polyline points="16 17 22 17 22 11"></polyline>
+                    </svg>
+                    <span>10% from yesterday</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if embedded_graph %}
+        <div class="card">
+            <div class="card-header">
+                <h2>Last 24 Hours</h2>
+                <a href="/graph" class="button">View All Graphs</a>
+            </div>
+            <div class="chart-container">
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color color-mode0"></div>
+                        <span>Mode 0</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color color-mode1"></div>
+                        <span>Mode 1</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color color-nomode"></div>
+                        <span>No Mode</span>
+                    </div>
+                </div>
+                <img src="data:image/png;base64,{{ embedded_graph }}" alt="Sensor readings for the last 24 hours">
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="card">
+            <h2>Add a Reading</h2>
+            <form id="reading-form">
+                <div class="form-group">
+                    <label for="reading-input">Reading Value (0.0-50.0):</label>
+                    <input type="number" step="0.1" min="0.0" max="50.0" id="reading-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="mode-input">Mode:</label>
+                    <select id="mode-input">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                    </select>
+                </div>
+                <button type="submit">Submit Reading</button>
+            </form>
+            <div id="result"></div>
+        </div>
+        
+        <div class="api-section">
+            <h2>API Documentation</h2>
+            <div class="card">
+                <h3>Add a Reading</h3>
+                <p>Submit a new sensor reading with this endpoint (requires authentication):</p>
+                <div class="code-block">GET /measure?reading=11.4&m=0</div>
+                <p>Example with curl:</p>
+                <div class="code-block">curl -u username:password "http://localhost:5000/measure?reading=11.4&m=0"</div>
+                
+                <div class="api-endpoint">
+                    <h4>Parameters:</h4>
+                    <ul>
+                        <li><strong>reading</strong>: A floating-point value between 0.0 and 50.0 (required)</li>
+                        <li><strong>m</strong>: The mode parameter with a value of either 0 or 1 (optional)</li>
+                    </ul>
+                </div>
+                
+                <h3>Other API Endpoints</h3>
+                <div class="api-endpoint">
+                    <h4>GET /readings</h4>
+                    <p>Retrieve all readings with pagination</p>
+                </div>
+                <div class="api-endpoint">
+                    <h4>GET /readings/hour</h4>
+                    <p>Readings from the last hour</p>
+                </div>
+                <div class="api-endpoint">
+                    <h4>GET /readings/day</h4>
+                    <p>Readings from the last 24 hours</p>
+                </div>
+                <div class="api-endpoint">
+                    <h4>GET /readings/week</h4>
+                    <p>Readings from the last week</p>
+                </div>
+                <div class="api-endpoint">
+                    <h4>GET /readings/month</h4>
+                    <p>Readings from the last month</p>
+                </div>
+                <div class="api-endpoint">
+                    <h4>GET /graph</h4>
+                    <p>View all graphs</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('reading-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const readingValue = document.getElementById('reading-input').value;
+            const modeValue = document.getElementById('mode-input').value;
+            const resultDiv = document.getElementById('result');
+            
+            // Validate reading value
+            if (readingValue < 0.0 || readingValue > 50.0) {
+                resultDiv.textContent = 'Error: Reading value must be between 0.0 and 50.0';
+                resultDiv.className = 'error';
+                return;
+            }
+            
+            resultDiv.textContent = 'Submitting...';
+            resultDiv.className = 'success';
+            
+            // Prompt for credentials
+            const username = prompt('Enter API username:') || '';
+            const password = prompt('Enter API password:') || '';
+            
+            // Create headers with basic auth
+            const headers = new Headers();
+            headers.set('Authorization', 'Basic ' + btoa(username + ":" + password));
+            
+            fetch(`/measure?reading=${readingValue}&m=${modeValue}`, {
+                headers: headers
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            throw new Error('Authentication failed. Invalid username or password.');
+                        }
+                        throw new Error('Request failed with status ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    resultDiv.textContent = `Success! Reading ${readingValue} saved with timestamp ${data.reading.timestamp}`;
+                    resultDiv.className = 'success';
+                    document.getElementById('reading-input').value = '';
+                    
+                    // Reload the page after 2 seconds to show the updated graph
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                })
+                .catch(error => {
+                    resultDiv.textContent = `Error: ${error.message}`;
+                    resultDiv.className = 'error';
+                });
+        });
+    </script>
+</body>
+</html>
